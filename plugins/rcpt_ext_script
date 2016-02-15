@@ -7,26 +7,35 @@ use Qpsmtpd::Constants;
 
 sub register {
     my ($self, $qp, @args) = @_;
+    if (@args != 2) {
+        $self->log(LOGERROR, "Missing script");
+	return;
+    }
+    else {
+        my %args = @args;
+        if ($args{script}) {
+            $self->{_args}{script} = $args{script};
+        }
+
+    }
     $self->register_hook("rcpt", "rcpt_handler");
 }
 
 sub rcpt_handler {
     my ($self, $transaction, $rcpt) = @_;
 
-    return DECLINED if $self->is_immune();    # requires QP 0.90+
+    return DECLINED if $self->is_immune();
 
     my $address = $rcpt->address;
-    $self->log(LOGDEBUG, "Checking deliverability for recipient '$address'");
+    $self->log(LOGINFO, "Checking deliverability for recipient '$address' using script " . $self->{_args}{script});
 
-    #$shared_domain = $rcpt->host;
-    system("/var/qmail/bin/qmail-ldap-rcpt-exist $address");
-    $self->log(LOGDEBUG, "qmail-ldap-rcpt-exist Return code: $?");
+    system($self->{_args}{script}, "$address");
     if ( $? == 0 )
     {
         return DECLINED;
     }
     $self->adjust_karma(-1);
-    return $self->get_reject("Sorry, no mailbox by that name. qd (#5.1.1)");
+    return $self->get_reject("Recipient not found!");
 
 
 }
