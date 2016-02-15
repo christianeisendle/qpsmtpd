@@ -1,5 +1,35 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+rcpt_ext_script - Call an external shell script or program to verify the recipient.
+
+=head1 DESCRIPTION
+
+This B<qpsmtpd plugin> can be configured to call an external program or shell
+script in order to verify a given recipient. The recipient's address is passed in
+as first input parameter. The script/program has to return 0, in case the recipient is
+valid. Any other return value means the recipient can't be verified.
+
+=head1 CONFIGURATION
+=over 4
+=item script /path/to/script
+This parameter has to be present otherwise the plugin is not loaded.
+It specifies the script to be called given the full path to the script.
+The script is run as same user as qpsmtpd is being executed.
+Example:
+    rcpt_ext_script script /var/qmail/bin/my-rcpt_chedck.sh
+=back
+=head1 LEGAL
+This software is released into the public domain, and does not come with
+warranty or guarantee of any kind. Use it at your own risk.
+=head1 AUTHOR
+Christian Eisendle <#########@eisendle.net>
+=cut
+
+#################################
+#################################
+
 use strict;
 use warnings;
 
