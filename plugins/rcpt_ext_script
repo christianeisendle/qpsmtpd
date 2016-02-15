@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Qpsmtpd::Constants;
+
+sub register {
+    my ($self, $qp, @args) = @_;
+    $self->register_hook("rcpt", "rcpt_handler");
+}
+
+sub rcpt_handler {
+    my ($self, $transaction, $rcpt) = @_;
+
+    return DECLINED if $self->is_immune();    # requires QP 0.90+
+
+    my $address = $rcpt->address;
+    $self->log(LOGDEBUG, "Checking deliverability for recipient '$address'");
+
+    #$shared_domain = $rcpt->host;
+    system("/var/qmail/bin/qmail-ldap-rcpt-exist $address");
+    $self->log(LOGDEBUG, "qmail-ldap-rcpt-exist Return code: $?");
+    if ( $? == 0 )
+    {
+        return DECLINED;
+    }
+    $self->adjust_karma(-1);
+    return $self->get_reject("Sorry, no mailbox by that name. qd (#5.1.1)");
+
+
+}
+
+
